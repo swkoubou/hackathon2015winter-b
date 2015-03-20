@@ -3,12 +3,14 @@ var _ = require('underscore');
 var async = require('async');
 var sessionMiddleware = require('../lib/module/sessionMiddleware');
 var User = require('../lib/model/user');
+var Game = require('../lib/model/game');
 var userStatus = require('../lib/model/userStatus');
 
 module.exports = function (server) {
     var io = socketio.listen(server);
-    var users = {};
+    var users = {}; // 接続しているユーザ情報
     var robbyId = '0000';
+    var sockets = {}; // ソケット群 (key: username)
 
     io.use(function (socket, next) {
         sessionMiddleware(socket.request, {}, next);
@@ -31,9 +33,13 @@ module.exports = function (server) {
             return;
         }
 
+        user.id = user.info.doc._id;
+        user.username = user.info.username;
+        sockets[user.username] = socket;
+
         // 接続したらユーザのステータスをログインにする
         socket.leave(robbyId);
-        User.updateStatus(user.info.username, userStatus.login, function (err) {
+        User.updateStatus(user.username, userStatus.login, function (err) {
             if (err) {
                 console.error(err);
                 socket.disconnect(err);
@@ -48,10 +54,71 @@ module.exports = function (server) {
 
             async.series([
                 leaveRoom.bind(this, socket, user),
-                joinRoom.bind(this, socket, user, robbyId)
+                joinRobbyRoom.bind(this, socket, user)
             ], function (err) {
-                if (err) { serverErrorWrap(err, {}, fn); }
-                else { successWrap('joined robby', {}, fn) }
+                if (err) { serverErrorWrap(err, {}, fn); return; }
+                successWrap('joined robby', {
+                    roomId: robbyId,
+                    roomType: 'robby'
+                }, fn);
+            });
+        });
+
+        // ゲームルームを作って誰かをゲームに誘う
+        socket.on('call-game', function (req, fn) {
+            req = req || {};
+            fn = fn || function () {};
+
+            if (!req.targetUsername) {
+                userErrorWrap('invalid params: required targetUsername', req, fn);
+                return;
+            }
+            if (!sockets[req.targetUsername]) {
+                userErrorWrap('invalid params: not found targetUsername', req, fn);
+            }
+
+            Game.create({}, function (err, game) {
+                if (err) { serverErrorWrap(err, {}, fn); return; }
+
+                async.series([
+                    leaveRoom.bind(this, socket, user),
+                    joinGameRoom.bind(this, socket, user, game._id),
+                    callGameRoom.bind(this, user.username, req.targetUsername, game._id)
+                ], function (err) {
+                    if (err) { serverErrorWrap(err, {}, fn); return; }
+                    successWrap('joined game room', {
+                        game: game,
+                        roomId: game._id,
+                        robbyType: 'gameRoom'
+                    }, fn);
+                });
+            });
+        });
+
+        // ゲームに参加する (呼出しに応じる)
+        socket.on('join-game', function (req, fn) {
+            req = req || {};
+            fn = fn || function () {};
+
+            if (!req.gameId) {
+                userErrorWrap('invalid params: required gameId', req, fn);
+            }
+
+            Game.findOne({_id: req.gameId}, function (err, game) {
+                if (err) { serverErrorWrap(err, {}, fn); return; }
+                if (!game) { userErrorWrap('invalid params: not found gameId', req, fn); return; }
+
+                async.series([
+                    leaveRoom.bind(this, socket, user),
+                    joinGameRoom.bind(this, socket, user, game._id)
+                ], function (err) {
+                    if (err) { serverErrorWrap(err, {}, fn); return; }
+                    successWrap('joined game room', {
+                        game: game,
+                        roomId: req.gameId,
+                        roomType: 'gameRoom'
+                    }, fn);
+                });
             });
         });
 
@@ -61,30 +128,29 @@ module.exports = function (server) {
 
             async.series([
                 leaveRoom.bind(this, socket, user),
-                User.updateStatus.bind(User, user.info.username, userStatus.logout)
+                User.updateStatus.bind(User, user.username, userStatus.logout)
             ], function (err) {
                 if (err) { console.error(err); }
 
                 socket.leaveAll();
                 delete users[socket.id];
+                delete sockets[user.username];
             });
         });
     });
 
-    /**** emitter *****/
+    /**** emitter and method *****/
 
-    /**** helper *****/
-
-    function joinRoom(socket, user, roomId, callback) {
-        var nextStatus = roomId === robbyId ? userStatus.robby : userStatus.playing;
-
-        User.updateStatus(user.info.username, nextStatus, function (err) {
+    function joinRobbyRoom(socket, user, callback) {
+        User.updateStatus(user.username, userStatus.robby, function (err) {
             if (err) { callback(err); return; }
 
-            socket.join(roomId);
-            user.roomId = roomId;
-            socket.to(roomId).json.emit('join-room', {
-                username: user.info.username
+            socket.join(robbyId);
+            user.roomId = robbyId;
+            socket.to(robbyId).json.emit('join-room', {
+                username: user.username,
+                roomId: robbyId,
+                roomType: 'robby'
             });
 
             callback(null);
@@ -92,22 +158,57 @@ module.exports = function (server) {
     }
 
     function leaveRoom(socket, user, callback) {
-        if (!user) { callback(null); }
+        if (!user) { callback(null); return; }
 
-        User.updateStatus(user.info.username, userStatus.login, function (err) {
+        User.updateStatus(user.username, userStatus.login, function (err) {
             if (err) { callback(err); return; }
 
             var roomId = user.roomId;
             if (roomId) {
                 socket.leave(roomId);
                 socket.to(roomId).json.emit('leave-room', {
-                    username: user.info.username
+                    username: user.username,
+                    roomId: roomId,
+                    roomType: roomId === robbyId ? 'robby' : 'gameRoom'
                 });
             }
 
             callback(null);
         });
     }
+
+    function joinGameRoom(socket, user, gameId, callback) {
+        User.findOneAndUpdate({name: user.username}, {
+            status: userStatus.playing,
+            game: gameId
+        }, function (err) {
+            if (err) { callback(err); return; }
+
+            socket.join(gameId);
+            user.roomId = gameId;
+            socket.to(gameId).json.emit('join-room', {
+                username: user.username,
+                roomId: robbyId,
+                roomType: 'gameRoom'
+            });
+
+            callback(null);
+        });
+    }
+
+    function callGameRoom(callerUsername, calleeUsername, gameId, callback) {
+        var socket = sockets[calleeUsername];
+        if (!socket) { callback(new Error('cannot found: ' + calleeUsername)); return; }
+
+        socket.emit('called-game', {
+            gameId: gameId,
+            callerUsername: callerUsername
+        });
+
+        callback(null);
+    }
+
+    /**** helper *****/
 
     function serverErrorWrap(err, otherParam, fn) {
         console.error(err);

@@ -1,31 +1,64 @@
 (function () {
     'use strict';
 
-    var socket = io.connect();
+    var socket = io.connect(),
+        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game'],
+        onEmits = ['join-robby', 'leave-robby', 'call-game'];
+
+    // debug
+    onKeys.forEach(function (key) {
+        socket.on(key, function(res) {
+            console.log('on: ' + key, res);
+        });
+    });
+
+    // debug
+    (function (f) {
+        socket.emit = function (key, req, fn) {
+            var callback = function (res) {
+                console.log('callback: ' + key, res);
+                if (fn) {
+                    fn.apply(this, arguments);
+                }
+            };
+
+            console.log('emit: ' + key, req);
+
+            f.call(socket, key, req, callback);
+        };
+    }(socket.emit));
+
+    //////////
 
     socket.on('connect', function () {
-        console.log('connect socket.io', arguments);
         joinRobby();
     });
 
-    socket.on('disconnect', function () {
-        console.log('disconnect socket.io', arguments);
+    socket.on('called-game', function (req) {
+        joinGame(req.gameId);
     });
 
-    socket.on('join-room', function (res) {
-        console.log('join-room', res);
-    });
-
-    socket.on('leave-room', function (res) {
-        console.log('leave-room', res);
-    });
-
-    function joinRobby() {
-        socket.emit('join-robby');
+    function joinRobby(callback) {
+        socket.emit('join-robby', {}, callback);
     }
 
-    function leaveRobby() {
-        socket.emit('leave-robby');
+    function leaveRobby(callback) {
+        socket.emit('leave-robby', {}, callback);
     }
+
+    function callGame(targetUsername, callback) {
+        socket.emit('call-game', { targetUsername: targetUsername }, callback);
+    }
+
+    function joinGame(gameId, callback) {
+        socket.emit('join-game', { gameId: gameId }, callback);
+    }
+
+    //////////
+
+    $('#call-game-btn').click(function () {
+        var targetUsername = $('#call-username').val();
+        callGame(targetUsername);
+    });
 
 }());
