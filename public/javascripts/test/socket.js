@@ -41,10 +41,6 @@
         socket.emit('join-robby', {}, callback);
     }
 
-    function leaveRobby(callback) {
-        socket.emit('leave-robby', {}, callback);
-    }
-
     function callGame(targetUsername, callback) {
         socket.emit('call-game', { targetUsername: targetUsername }, callback);
     }
@@ -66,6 +62,10 @@
 
     $('#start-game-btn').click(function () {
         startGame();
+    });
+
+    $('#join-robby-btn').click(function () {
+        joinRobby();
     });
 
 }());
