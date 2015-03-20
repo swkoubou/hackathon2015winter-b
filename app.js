@@ -9,6 +9,7 @@ var TwitterStrategy = require('passport-twitter').Strategy;
 var mongoose = require('mongoose');
 var config = require('config');
 var sessionMiddleware = require('./lib/module/sessionMiddleware');
+var User = require('./lib/model/user');
 
 // mongoose
 mongoose.connect(config.mongo.url);
@@ -23,7 +24,10 @@ passport.use(new TwitterStrategy({
         var user =  profile;
         user.token = token;
         user.tokenSecret = tokenSecret;
-        done(null, user);
+        User.findOrCreate(user.username, function (err, doc) {
+            user.doc = doc;
+            done(err, user);
+        });
     }
 ));
 passport.serializeUser(function(user, done) {
