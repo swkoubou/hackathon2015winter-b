@@ -3,7 +3,7 @@
   var Model = ns('swkoubou.hackathon2015winter.Model');
 
 // 基本ブロッククラス
-  Model.Block = Class.create(Sprite, {
+  Model.Block = enchant.Class.create(enchant.Sprite, {
     BLOCK_SIZE: 64,
     initialize: function(type, leftRightColor, rightLeftColor){
       Sprite.call(this.BLOCK_SIZE, this.BLOCK_SIZE);

@@ -1,10 +1,16 @@
-$(function(){
+(function(){
   'use strict';
   var Package = ns('swkoubou.hackathon2015winter');
+  var App =  ns('swkoubou.hackathon2015winter.App');
+  var Model = Package.Model;
 
   enchant();
-  var WIDTH = 1400;
-  var HEIGHT = 800;
+  Package.global = {
+    WIDTH: 1400,
+    HEIGHT: 800
+  };
+  var WIDTH = Package.global.WIDTH;
+  var HEIGHT = Package.global.HEIGHT;
   var OVERLAY_COLOR = 'rgba(0, 0, 0, .8)';
   var LEFT_MARGIN = 40;
   var RIGHT_MARGIN = 40;
@@ -14,22 +20,16 @@ $(function(){
   var FINISH_TEXT_SHOW_TIME = 3;
   var SQUARE_STROKE_WIDTH = 3;
 
-  // global variables
-  var game = new Core(WIDTH, HEIGHT);
-  var timer = new Timer();
-
-  init();
-
-  function init(){
+  App.start = function(){
+    var game = new Core(WIDTH, HEIGHT);
     game.preload(); // load game resource
     game.fps = 60;
-    game.players = {};
-   game.onload = function(){
-      changeGameScene();
+    game.onload = function(){
+      changeGameScene("_X_y_z_", "sunya");
     };
     // game.scale = 1.5;
     game.start();
-  }
+  };
 
   // ゲーム始まる直前のReady go 画面を表示させる予定
   function changeReadyScene(){
@@ -37,15 +37,22 @@ $(function(){
   }
 
   // ゲーム中画面
-  function changeGameScene(){
-    timer.setTimeUpCallback(timeUpCallback);
-    game.addEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
+  function changeGameScene(p1, p2){
+    var timer = new Model.Timer();
+    var game = enchant.Core.instance;
+    game.addEventListener(enchant.Event.ENTER_FRAME, timer.update);
+    timer.setTimeUpCallback(function(){
+      game.removeEventListener(enchant.Event.ENTER_FRAME, timer.update);
+      showFinishScene();
+      // FINISH_TEXT_SHOW_TIMEミリ後に結果表示
+      _.delay(changeResultScene, FINISH_TEXT_SHOW_TIME);
+    });
     var scene = new Scene();
     scene.backgroundColor = '#FFEBEE';
     game.replaceScene(scene);
     timer.start(scene);
-    var player1 = new Player('_X_y_z_', 0, scene);
-    var player2 = new Player('sunya', 1, scene);
+    var player1 = new Model.Player(p1, 0, scene);
+    var player2 = new Model.Player(p2, 1, scene);
     var squareWidth = WIDTH - LEFT_MARGIN;
     var squareHeight = HEIGHT - TOP_MARGIN;
     var squareImage = new Sprite(squareWidth, squareHeight);
@@ -58,34 +65,24 @@ $(function(){
     scene.addChild(squareImage);
   }
 
-  // ゲーム中のタイマーコールバック 残り時間表示アップデートと終了処理
-  function countDownCallback(){
-    var remain = timer.update();
-  }
-
   // タイムアップ時のコールバック関数
   function timeUpCallback(){
-    game.removeEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
-    showFinishScene();
 
-    // FINISH_TEXT_SHOW_TIMEミリ後に結果表示
-    setTimeout(function(){
-      changeResultScene();
-    }, FINISH_TEXT_SHOW_TIME);
   }
 
   // ゲーム終了時の画面
   function showFinishScene(){
+    var game = enchant.Core.instance;
     var scene = new Scene();
     scene.backgroundColor = OVERLAY_COLOR;
-    var finishText = new NotoLabel('600%');
+    var finishText = new Model.NotoLabel('600%');
     finishText.text = 'Finish!';
     finishText.color = '#FF5722';
     finishText.width = WIDTH;
     finishText.textAlign = 'center';
     finishText.moveTo(0, (HEIGHT - finishText._boundHeight) / 2);
     scene.addChild(finishText);
-    enchant.Core.instance.pushScene(scene);
+    game.pushScene(scene);
   }
 
   //結果表示画面
@@ -93,4 +90,4 @@ $(function(){
 
   }
 
-});
+}).call(this);

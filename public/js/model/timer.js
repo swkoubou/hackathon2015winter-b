@@ -1,22 +1,24 @@
 (function(){
   'use strict';
-  var Model = ns('swkoubou.hackathon2015winter.Model');
+  var Package = ns('swkoubou.hackathon2015winter');
+  var Model = Package.Model;
 
   // 残り時間に関して処理を行うクラス 残り時間の管理と表示のアップデート
-  Model.Timer = Class.create({
+  Model.Timer = enchant.Class.create({
     TIME_LIMIT: 60,
     CIRCLE_SIZE: 80,
     TIMER_COLOR: '#F44336',
     TIMER_BORDER_WIDTH: 5,
     initialize: function(){
+      _.bindAll(this, 'update');
       this.time = this.TIME_LIMIT;
       this.game = enchant.Core.instance;
       this.endCallback = _.noop;
-      this.timerLabel = new NotoLabel('400%');
+      this.timerLabel = new Model.NotoLabel('400%');
       this.timerLabel.color = this.TIMER_COLOR;
       this.timerLabel.text = this.TIME_LIMIT;
       this.timerLabel.textAlign = 'center';
-      this.timerLabel.width = WIDTH;
+      this.timerLabel.width = Package.global.WIDTH;
       this.timerLabel.moveTo(0, 18);
 
       this.circleWrapperSize = this.CIRCLE_SIZE + this.TIMER_BORDER_WIDTH * 2;
@@ -27,7 +29,7 @@
       this.center = this.CIRCLE_SIZE / 2 + this.TIMER_BORDER_WIDTH;
       sprite.image = circle;
       this.circle = circle;
-      sprite.moveTo((WIDTH - this.CIRCLE_SIZE - this.TIMER_BORDER_WIDTH) / 2, 12 - this.TIMER_BORDER_WIDTH);
+      sprite.moveTo((Package.global.WIDTH - this.CIRCLE_SIZE - this.TIMER_BORDER_WIDTH) / 2, 12 - this.TIMER_BORDER_WIDTH);
       this.circleSprite = sprite;
     },
     update: function(){
@@ -38,7 +40,6 @@
       this.circle.context.beginPath();
       this.circle.context.arc(this.center, this.center, this.CIRCLE_SIZE / 2, -Math.PI/ 2, Math.PI * 2 - (progressFloat / this.TIME_LIMIT * Math.PI * 2) - Math.PI / 2, false);
       this.circle.context.stroke();
-      console.log(remain);
       if(this.prev !== remain){
         this.timerLabel.text = remain;
       }

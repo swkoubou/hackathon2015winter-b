@@ -1,6 +1,7 @@
 (function(){
   'use strict';
-  var Model = ns('swkoubou.hackathon2015winter.Model');
+  var Package = ns('swkoubou.hackathon2015winter');
+  var Model = Package.Model;
 
   var NAME_COLOR = '#009688';
 
@@ -8,13 +9,14 @@
     プレイヤークラス
     スコアと名前の保持と表示に関する処理など
   */
-  Model.Player = Class.create({
+  Model.Player = enchant.Class.create({
     initialize: function(name, playerId, gameScene){
+      var WIDTH = enchant.Core.instance.width;
       this.score = 0;
       this.name = name;
       this.offset = (WIDTH / 2) * playerId;
 
-      var scoreLabel = new NotoLabel('200%');
+      var scoreLabel = new Model.NotoLabel('200%');
       this.scoreLabel = scoreLabel;
       scoreLabel.color = '#009688';
       scoreLabel.textAlign = 'center';
@@ -23,7 +25,7 @@
       var textPos = WIDTH / 2 * playerId;
       scoreLabel.moveTo(textPos, 18);
 
-      var nameLabel = new NotoLabel('200%');
+      var nameLabel = new Model.NotoLabel('200%');
       nameLabel.color = NAME_COLOR;
       nameLabel.text = name;
       nameLabel.textAlign = 'center';

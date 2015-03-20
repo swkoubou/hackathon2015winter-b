@@ -5,7 +5,7 @@
   var FONT_PROP = '/1.5 "Noto sans"';
 
   // Notoフォントで表示するためだけのクラス
-  Model.NotoLabel = Class.create(Label, {
+  Model.NotoLabel = enchant.Class.create(enchant.Label, {
     initialize: function(fontSize){
       Label.call(this);
       fontSize = fontSize || '100%';
