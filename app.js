@@ -55,9 +55,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // routing
 var index = require('./routes/index');
 var auth = require('./routes/auth')(passport);
+var socketTest = require('./routes/socketTest');
 
 app.use('/', index);
 app.use('/auth', auth);
+app.use('/socketTest', socketTest);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
