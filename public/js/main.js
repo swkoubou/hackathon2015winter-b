@@ -66,7 +66,7 @@ $(function(){
 
   // 残り時間に関して処理を行うクラス 残り時間の管理と表示のアップデート
   var Timer = Class.create({
-    TIME_LIMIT: 1,
+    TIME_LIMIT: 60,
     CIRCLE_SIZE: 80,
     TIMER_COLOR: '#F44336',
     TIMER_BORDER_WIDTH: 5,
@@ -74,12 +74,12 @@ $(function(){
       this.time = this.TIME_LIMIT;
       this.game = enchant.Core.instance;
       this.endCallback = _.noop;
-      this.timerLabel = new NotoLabel('500%');
+      this.timerLabel = new NotoLabel('400%');
       this.timerLabel.color = this.TIMER_COLOR;
       this.timerLabel.text = this.TIME_LIMIT;
       this.timerLabel.textAlign = "center";
       this.x = (WIDTH - this.timerLabel._boundWidth) / 2;
-      this.timerLabel.moveTo(this.x - 117, 10);
+      this.timerLabel.moveTo(this.x - 117, 18);
 
       this.circleWrapperSize = this.CIRCLE_SIZE + this.TIMER_BORDER_WIDTH * 2;
       var circle = new Surface(this.circleWrapperSize, this.circleWrapperSize);
@@ -182,6 +182,8 @@ $(function(){
   function timeUpCallback(){
     game.removeEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
     showFinishScene();
+
+    // FINISH_TEXT_SHOW_TIMEミリ後に結果表示
     setTimeout(function(){
       changeResultScene();
     }, FINISH_TEXT_SHOW_TIME);
