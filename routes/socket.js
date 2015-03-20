@@ -58,14 +58,17 @@ module.exports = function (server) {
 
             async.series([
                 leaveRoom.bind(this, socket, user),
-                joinLobbyRoom.bind(this, socket, user)
+                joinLobbyRoom.bind(this, socket, user),
+                User.find.bind(User, {roomId: lobbyId})
             ], function (err, results) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
 
                 var user = results[1];
+                var users = results[2];
                 successWrap('joined lobby', {
                     roomId: user.roomId,
-                    roomType: roomTypeById(user.roomId)
+                    roomType: roomTypeById(user.roomId),
+                    users: users
                 }, fn);
             });
         });
@@ -106,6 +109,7 @@ module.exports = function (server) {
 
                 successWrap('joined game room', {
                     game: game,
+                    users: [user],
                     roomId: user.roomId,
                     roomType: roomTypeById(user.roomId)
                 }, fn);
@@ -133,19 +137,22 @@ module.exports = function (server) {
 
                     async.series([
                         leaveRoom.bind(this, socket, user),
-                        joinGameRoom.bind(this, socket, user, gameId)
+                        joinGameRoom.bind(this, socket, user, gameId),
+                        User.find.bind(User, {roomId: String(gameId)})
                     ], function (err, results) {
                         if (err) { callback(err); return; }
 
                         var user = results[1];
-                        callback(null, game, user);
+                        var users = results[2];
+                        callback(null, game, user, users);
                     });
                 }
-            ], function (err, game, user) {
+            ], function (err, game, user, users) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
 
                 successWrap('joined game room', {
                     game: game,
+                    users: users,
                     roomId: user.roomId,
                     roomType: roomTypeById(user.roomId)
                 }, fn);
