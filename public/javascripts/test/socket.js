@@ -2,8 +2,7 @@
     'use strict';
 
     var socket = io.connect(),
-        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game'],
-        onEmits = ['join-robby', 'leave-robby', 'call-game'];
+        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game', 'start-game'];
 
     // debug
     onKeys.forEach(function (key) {
@@ -54,11 +53,19 @@
         socket.emit('join-game', { gameId: gameId }, callback);
     }
 
+    function startGame(callback) {
+        socket.emit('start-game', {}, callback);
+    }
+
     //////////
 
     $('#call-game-btn').click(function () {
         var targetUsername = $('#call-username').val();
         callGame(targetUsername);
+    });
+
+    $('#start-game-btn').click(function () {
+        startGame();
     });
 
 }());
