@@ -1,5 +1,6 @@
 var socketio = require('socket.io');
 var _ = require('underscore');
+var async = require('async');
 var sessionMiddleware = require('../lib/module/sessionMiddleware');
 var User = require('../lib/model/user');
 var userStatus = require('../lib/model/userStatus');
@@ -25,10 +26,14 @@ module.exports = function (server) {
 
         users[socket.id] = user;
 
-        checkAuth(socket, function (message) { socket.disconnect(message); });
+        // ログインしていなかったら接続を切る
+        if (!checkAuth(socket, function (message) { socket.disconnect(message); })) {
+            return;
+        }
 
+        // 接続したらユーザのステータスをログインにする
         socket.leave(robbyId);
-        User.updateStatus(user.username, userStatus.login, function (err) {
+        User.updateStatus(user.info.username, userStatus.login, function (err) {
             if (err) {
                 console.error(err);
                 socket.disconnect(err);
@@ -37,12 +42,32 @@ module.exports = function (server) {
 
         /***** イベント登録 *****/
 
+        // ロビーに入る
+        socket.on('join-robby', function (req, fn) {
+            fn = fn || function () {};
+
+            async.series([
+                leaveRoom.bind(this, socket, user),
+                joinRoom.bind(this, socket, user, robbyId)
+            ], function (err) {
+                if (err) { serverErrorWrap(err, {}, fn); }
+                else { successWrap('joined robby', {}, fn) }
+            });
+        });
+
         // 切断
         socket.on('disconnect', function () {
             console.log('disconnected: ' + socket.id);
-            leaveRoom(socket);
-            socket.leaveAll();
-            delete users[socket.id];
+
+            async.series([
+                leaveRoom.bind(this, socket, user),
+                User.updateStatus.bind(User, user.info.username, userStatus.logout)
+            ], function (err) {
+                if (err) { console.error(err); }
+
+                socket.leaveAll();
+                delete users[socket.id];
+            });
         });
     });
 
@@ -50,22 +75,41 @@ module.exports = function (server) {
 
     /**** helper *****/
 
-    function joinRoom(socket, roomId) {
-        socket.join(roomId);
-        users[socket.id].roomId = roomId;
+    function joinRoom(socket, user, roomId, callback) {
+        var nextStatus = roomId === robbyId ? userStatus.robby : userStatus.playing;
+
+        User.updateStatus(user.info.username, nextStatus, function (err) {
+            if (err) { callback(err); return; }
+
+            socket.join(roomId);
+            user.roomId = roomId;
+            socket.to(roomId).json.emit('join-room', {
+                username: user.info.username
+            });
+
+            callback(null);
+        });
     }
 
-    function leaveRoom(socket) {
-        var user = users[socket.id];
-        if (!user) { return; }
-        var roomId = user.roomId;
+    function leaveRoom(socket, user, callback) {
+        if (!user) { callback(null); }
 
-        if (roomId) {
-            socket.leave(roomId);
-        }
+        User.updateStatus(user.info.username, userStatus.login, function (err) {
+            if (err) { callback(err); return; }
+
+            var roomId = user.roomId;
+            if (roomId) {
+                socket.leave(roomId);
+                socket.to(roomId).json.emit('leave-room', {
+                    username: user.info.username
+                });
+            }
+
+            callback(null);
+        });
     }
 
-    function serverErrorWrap(fn, err, otherParam) {
+    function serverErrorWrap(err, otherParam, fn) {
         console.error(err);
         fn(_.extend({
             status: 'server error',
@@ -73,14 +117,14 @@ module.exports = function (server) {
         }, otherParam || {}));
     }
 
-    function userErrorWrap(fn, message, otherParam) {
+    function userErrorWrap(message, otherParam, fn) {
         fn(_.extend({
             status: 'error',
             message: message
         }, otherParam || {}));
     }
 
-    function successWrap(fn, message, otherParam) {
+    function successWrap(message, otherParam, fn) {
         fn(_.extend({
             status: 'success',
             message: message
@@ -92,12 +136,12 @@ module.exports = function (server) {
         var user = users[socket.id];
 
         if (!user) {
-            serverErrorWrap(new Error('undefined user'), fn);
+            serverErrorWrap(new Error('undefined user'), {}, fn);
             return false;
         }
 
         if (!user.info) {
-            userErrorWrap('must be login', fn);
+            userErrorWrap('must be login', {}, fn);
             return false;
         }
 
@@ -110,7 +154,7 @@ module.exports = function (server) {
         if (!checkAuth(socket, fn)) { return false; }
 
         if (!user.projectRoomId) {
-            userErrorWrap('must be join game room', fn);
+            userErrorWrap('must be join game room', {}, fn);
             return false;
         }
 
