@@ -19,7 +19,7 @@
    inkscape:export-filename="/Users/swkoubou/test"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
-   sodipodi:docname="RightRedLine.svg">
+   sodipodi:docname="LeftBlueLine.svg">
   <defs
      id="defs4">
     <linearGradient
@@ -36,10 +36,10 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.56"
-     inkscape:cx="53.752815"
+     inkscape:cx="-5.0362475"
      inkscape:cy="149.15421"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -74,8 +74,8 @@
      id="layer1"
      transform="translate(0,-988.3622)">
     <path
-       style="opacity:1;fill:#f80000;fill-opacity:1;fill-rule:evenodd;stroke:#fc0000;stroke-width:1.01264417;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       d="m 0.35717029,1052.0031 63.43381071,-63.1343 0,0"
+       style="opacity:1;fill:#f80000;fill-opacity:1;fill-rule:evenodd;stroke:#0000ff;stroke-width:1.00475502;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 63.642759,1052.0094 -62.4394706,-63.14522 0,0"
        id="path3337"
        inkscape:connector-curvature="0" />
   </g>

@@ -19,7 +19,7 @@
    inkscape:export-filename="/Users/swkoubou/test"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
-   sodipodi:docname="LeftRedLine.svg">
+   sodipodi:docname="LeftGreenLine.svg">
   <defs
      id="defs4">
     <linearGradient
@@ -36,10 +36,10 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="1"
+     inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.56"
-     inkscape:cx="53.752815"
+     inkscape:cx="-5.0362475"
      inkscape:cy="149.15421"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -47,9 +47,9 @@
      inkscape:snap-bbox="true"
      inkscape:window-width="1920"
      inkscape:window-height="955"
-     inkscape:window-x="5"
-     inkscape:window-y="19"
-     inkscape:window-maximized="0"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
      inkscape:snap-center="false"
      units="px">
     <inkscape:grid
@@ -72,10 +72,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-988.3622)">
+     transform="translate(0,-988.36444)">
     <path
-       style="opacity:1;fill:#f80000;fill-opacity:1;fill-rule:evenodd;stroke:#fc0000;stroke-width:1.00468171;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       d="m 0.85719892,988.71643 62.43307108,63.14237 0,0"
+       style="opacity:1;fill:#f80000;fill-opacity:1;fill-rule:evenodd;stroke:#00ff00;stroke-width:1.00475502;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       d="m 63.642759,1052.0116 -62.4394706,-63.14518 0,0"
        id="path3337"
        inkscape:connector-curvature="0" />
   </g>
