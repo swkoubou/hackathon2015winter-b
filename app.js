@@ -24,7 +24,14 @@ passport.use(new TwitterStrategy({
         var user =  profile;
         user.token = token;
         user.tokenSecret = tokenSecret;
-        User.findOrCreate(user.username, function (err, doc) {
+
+        var params = {
+            name: user.username,
+            displayName: user.displayName,
+            profileImageURL: user._json.profile_image_url
+        };
+
+        User.findOrCreate(user.username, params, function (err, doc) {
             user.doc = doc;
             done(err, user);
         });

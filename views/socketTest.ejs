@@ -14,7 +14,7 @@
 
 <p>logined</p>
 <p><a href="/auth/logout">logout</a></p>
-<p>Hello, <%= user.displayName %></p>
+<p>Hello, <%= user.username %></p>
 
 <% } else { %>
 
@@ -22,8 +22,30 @@
 
 <% } %>
 
+<hr>
+
+<form class="call-game-test">
+    <h2>Emit: call-game</h2>
+    <div>
+        <label for="call-username">call username</label>
+        <input type="text" id="call-username">
+    </div>
+    <button type="button" id="call-game-btn">Submit</button>
+</form>
+
+<form class="join-lobby-test">
+    <h2>Emit: join-lobby</h2>
+    <button type="button" id="join-lobby-btn">Join Lobby</button>
+</form>
+
+<form class="start-game-test">
+    <h2>Emit: start-game</h2>
+    <button type="button" id="start-game-btn">Start Game</button>
+</form>
+
 <!-- load javascripts -->
 <script src="/socket.io/socket.io.js"></script>
+<script src="/vendor/jquery/dist/jquery.min.js"></script>
 <script src="/javascripts/test/socket.js"></script>
 
 </body>
