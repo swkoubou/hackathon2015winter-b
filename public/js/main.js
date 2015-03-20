@@ -5,6 +5,7 @@ $(function(){
   var HEIGHT = 800;
   var FONT_PROP = '/1.5 "Noto sans"';
   var NAME_COLOR = '#009688';
+  var OVERLAY_COLOR = 'rgba(0, 0, 0, .8)';
   var LEFT_MARGIN = 40;
   var RIGHT_MARGIN = 40;
   var TOP_MARGIN = 100;
@@ -65,21 +66,63 @@ $(function(){
 
   // 残り時間に関して処理を行うクラス 残り時間の管理と表示のアップデート
   var Timer = Class.create({
-    TIME_LIMIT: 5,
+    TIME_LIMIT: 1,
+    CIRCLE_SIZE: 80,
+    TIMER_COLOR: '#F44336',
+    TIMER_BORDER_WIDTH: 5,
     initialize: function(){
       this.time = this.TIME_LIMIT;
       this.game = enchant.Core.instance;
+      this.endCallback = _.noop;
+      this.timerLabel = new NotoLabel('500%');
+      this.timerLabel.color = this.TIMER_COLOR;
+      this.timerLabel.text = this.TIME_LIMIT;
+      this.timerLabel.textAlign = "center";
+      this.x = (WIDTH - this.timerLabel._boundWidth) / 2;
+      this.timerLabel.moveTo(this.x - 117, 10);
+
+      this.circleWrapperSize = this.CIRCLE_SIZE + this.TIMER_BORDER_WIDTH * 2;
+      var circle = new Surface(this.circleWrapperSize, this.circleWrapperSize);
+      var sprite = new Sprite(this.circleWrapperSize, this.circleWrapperSize);
+      circle.context.lineWidth = this.TIMER_BORDER_WIDTH;
+      circle.context.strokeStyle = this.TIMER_COLOR;
+      this.center = this.CIRCLE_SIZE / 2 + this.TIMER_BORDER_WIDTH;
+      sprite.image = circle;
+      this.circle = circle;
+      sprite.moveTo(this.x - this.TIMER_BORDER_WIDTH * 2, 12 - this.TIMER_BORDER_WIDTH);
+      this.circleSprite = sprite;
     },
     update: function(){
-      var progress = parseInt(this.game.frame / this.game.fps);
+      var progressFloat = this.game.frame / this.game.fps;
+      var progress = parseInt(progressFloat);
       var remain = this.TIME_LIMIT - progress;
+      this.circle.context.clearRect(0, 0, this.circleWrapperSize, this.circleWrapperSize);
+      this.circle.context.beginPath();
+      this.circle.context.arc(this.center, this.center, this.CIRCLE_SIZE / 2, -Math.PI/ 2, Math.PI * 2 - (progressFloat / this.TIME_LIMIT * Math.PI * 2) - Math.PI / 2, false);
+      this.circle.context.stroke();
+      console.log(remain);
+      if(this.prev !== remain){
+        this.timerLabel.text = remain;
+      }
+      this.prev = remain;
+      if(remain === 0){
+        this.end();
+      }
       return this.time = remain;
     },
     getRemainingTime: function(){
       return this.time;
     },
-    start: function(){
+    setTimeUpCallback: function(callback){
+      this.endCallback = callback;
+    },
+    start: function(scene){
+      scene.addChild(this.circleSprite);
       this.game.frame = 0;
+      scene.addChild(this.timerLabel);
+    },
+    end: function(){
+      if(this.endCallback) this.endCallback();
     },
     getPlayTime: function(){
       return this.TIME_LIMIT;
@@ -87,7 +130,6 @@ $(function(){
   });
 
   // global variables
-  var timeLabel = new NotoLabel('500%');
   var game = new Core(WIDTH, HEIGHT);
   var timer = new Timer();
 
@@ -97,10 +139,7 @@ $(function(){
     game.preload(); // load game resource
     game.fps = 60;
     game.players = {};
-    timeLabel.color = '#F44336';
-    timeLabel.text = timer.getPlayTime();
-    timeLabel.moveTo((WIDTH - timeLabel._boundWidth) / 2, 10);
-    game.onload = function(){
+   game.onload = function(){
       changeGameScene();
     };
     // game.scale = 1.5;
@@ -114,12 +153,12 @@ $(function(){
 
   // ゲーム中画面
   function changeGameScene(){
-    timer.start();
+    timer.setTimeUpCallback(timeUpCallback);
     game.addEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
     var scene = new Scene();
     scene.backgroundColor = '#FFEBEE';
     game.replaceScene(scene);
-    scene.addChild(timeLabel);
+    timer.start(scene);
     var player1 = new Player('_X_y_z_', 0, scene);
     var player2 = new Player('sunya', 1, scene);
     var squareWidth = WIDTH - LEFT_MARGIN;
@@ -137,25 +176,28 @@ $(function(){
   // ゲーム中のタイマーコールバック 残り時間表示アップデートと終了処理
   function countDownCallback(){
     var remain = timer.update();
-    if(remain < 0){
-      game.removeEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
-      showFinishText();
-      setTimeout(function(){
-        changeResultScene();
-      }, FINISH_TEXT_SHOW_TIME);
-    }else{
-      timeLabel.text = remain;
-    }
   }
 
-  function showFinishText(){
-    // game finish
+  // タイムアップ時のコールバック関数
+  function timeUpCallback(){
+    game.removeEventListener(enchant.Event.ENTER_FRAME, countDownCallback);
+    showFinishScene();
+    setTimeout(function(){
+      changeResultScene();
+    }, FINISH_TEXT_SHOW_TIME);
+  }
+
+  // ゲーム終了時の画面
+  function showFinishScene(){
+    var scene = new Scene();
+    scene.backgroundColor = OVERLAY_COLOR;
     var finishText = new NotoLabel('600%');
     finishText.text = 'Finish!';
     finishText.color = '#FF5722';
     finishText.moveTo((WIDTH - finishText._boundWidth) / 2,
     (HEIGHT - finishText._boundHeight) / 2);
-    game.currentScene.addChild(finishText);
+    scene.addChild(finishText);
+    enchant.Core.instance.pushScene(scene);
   }
 
   //結果表示画面
