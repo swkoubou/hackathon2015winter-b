@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var config = require('config');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -7,7 +8,7 @@ router.get('/', function (req, res, next) {
     var logined = req.isAuthenticated && req.isAuthenticated();
 
     res.render('index', {
-        title: 'Express',
+        title: config.title,
         mustLogin: mustLogin,
         logined: logined,
         user: req.user
