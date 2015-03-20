@@ -13,6 +13,7 @@
   ],
   "dependencies": {
     "jquery": "~2",
-    "underscore": "~1"
+    "underscore": "~1",
+    "enchant.js-builds": "~0.8.2"
   }
 }
