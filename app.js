@@ -21,6 +21,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.locals = {
+  app: {
+    game_title: "Game"
+  }
+};
+
 app.use('/', routes);
 app.use('/game', routes)
 
