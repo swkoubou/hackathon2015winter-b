@@ -37,6 +37,10 @@
         joinGame(req.gameId);
     });
 
+    socket.on('start-game', function (req) {
+        updateBlocks(req.game);
+    });
+
     function joinLobby(callback) {
         socket.emit('join-lobby', {}, callback);
     }
@@ -67,5 +71,28 @@
     $('#join-lobby-btn').click(function () {
         joinLobby();
     });
+
+    function updateBlocks(game) {
+        var $uls = $('#blocks ul');
+
+        $uls.each(function (i) {
+            var $ul = $(this);
+            $ul.children('li').remove();
+
+            var $li;
+            game.users[i].blocks.forEach(function (block, i) {
+                if (!(i % 10)) {
+                    $li = $('<li></li>');
+                }
+
+                var str = block.type === 'ojama' ? 'x' : 'o';
+                $li.append('<span>' + str + '</span>');
+
+                if (!((i + 1) % 10)) {
+                    $ul.append($li);
+                }
+            });
+        });
+    }
 
 }());

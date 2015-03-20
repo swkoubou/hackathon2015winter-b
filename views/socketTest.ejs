@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <style>
+        #blocks ul {
+            float: left;
+            width: 200px;
+        }
+        #blocks ul li {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        #blocks ul li span {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+        }
+    </style>
 </head>
 <body>
 
@@ -28,7 +44,7 @@
     <h2>Emit: call-game</h2>
     <div>
         <label for="call-username">call username</label>
-        <input type="text" id="call-username">
+        <input type="text" id="call-username" value="swk_infolecture">
     </div>
     <button type="button" id="call-game-btn">Submit</button>
 </form>
@@ -42,6 +58,13 @@
     <h2>Emit: start-game</h2>
     <button type="button" id="start-game-btn">Start Game</button>
 </form>
+
+<hr>
+
+<div id="blocks">
+    <ul></ul>
+    <ul></ul>
+</div>
 
 <!-- load javascripts -->
 <script src="/socket.io/socket.io.js"></script>
