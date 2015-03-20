@@ -1,0 +1,20 @@
+{
+  "title": "Hackathon2015Winter-TeamB",
+
+  "mongo": {
+    "url": "mongodb://localhost/hackathon2015winter-b"
+  },
+
+  "twitter": {
+    "consumer": {
+      "key": "eLzWGOntVC8LtMHYtDOTam9qu",
+      "secret": "d9XeinvGycvHrU6ON0coTc8TnoFHUZWdxv1kxSMMO6ag0husdI"
+    },
+    "callbackURL": "http://127.0.0.1:3000/auth/twitter/callback"
+  },
+
+  "session": {
+    "name": "name",
+    "secret": "secret"
+  }
+}
