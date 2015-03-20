@@ -138,8 +138,8 @@ module.exports = function (server) {
             req = req || {};
             fn = fn || function () {};
 
-            req.gameLimitSeconds = 5 * 1000;
-            req.delaySeconds = 20;
+            req.gameLimitSeconds = req.gameLimitSeconds || 5 * 1000;
+            req.delaySeconds = req.delaySeconds || 20;
 
             var roomId = user.roomId;
             var roomType = user.roomType;
@@ -265,10 +265,14 @@ module.exports = function (server) {
             game.start(gameLimitSeconds, delaySeconds, function (err, game) {
                 if (err) { callback(err); return; }
 
-                var roomId = String(gameId);
-                io.to(roomId).emit('start-game', {game: game});
+                game.populate('users.user', function (err, game) {
+                    if (err) { callback(err); return; }
 
-                game.populate('users.user', callback);
+                    var roomId = String(gameId);
+                    io.to(roomId).emit('start-game', {game: game});
+
+                    callback(null, game);
+                });
             });
         });
     }
