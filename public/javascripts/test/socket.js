@@ -30,15 +30,15 @@
     //////////
 
     socket.on('connect', function () {
-        joinRobby();
+        joinLobby();
     });
 
     socket.on('called-game', function (req) {
         joinGame(req.gameId);
     });
 
-    function joinRobby(callback) {
-        socket.emit('join-robby', {}, callback);
+    function joinLobby(callback) {
+        socket.emit('join-lobby', {}, callback);
     }
 
     function callGame(targetUsername, callback) {
@@ -64,8 +64,8 @@
         startGame();
     });
 
-    $('#join-robby-btn').click(function () {
-        joinRobby();
+    $('#join-lobby-btn').click(function () {
+        joinLobby();
     });
 
 }());

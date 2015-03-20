@@ -10,7 +10,7 @@ var ObjectId = require('mongoose').Schema.ObjectId;
 module.exports = function (server) {
     var io = socketio.listen(server);
     var users = {}; // 接続しているユーザ情報
-    var robbyId = '0000';
+    var lobbyId = '0000';
     var sockets = {}; // ソケット群 (key: username)
 
     io.use(function (socket, next) {
@@ -53,17 +53,17 @@ module.exports = function (server) {
         /***** イベント登録 *****/
 
         // ロビーに入る
-        socket.on('join-robby', function (req, fn) {
+        socket.on('join-lobby', function (req, fn) {
             fn = fn || function () {};
 
             async.series([
                 leaveRoom.bind(this, socket, user),
-                joinRobbyRoom.bind(this, socket, user)
+                joinLobbyRoom.bind(this, socket, user)
             ], function (err, results) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
 
                 var user = results[1];
-                successWrap('joined robby', {
+                successWrap('joined lobby', {
                     roomId: user.roomId,
                     roomType: roomTypeById(user.roomId)
                 }, fn);
@@ -209,19 +209,19 @@ module.exports = function (server) {
 
     /**** emitter and method *****/
 
-    function joinRobbyRoom(socket, user, callback) {
+    function joinLobbyRoom(socket, user, callback) {
         User.findOneAndUpdate({name: user.name}, {
-            status: userStatus.robby,
+            status: userStatus.lobby,
             gameId: null,
-            roomId: robbyId
+            roomId: lobbyId
         }, function (err, user) {
             if (err) { callback(err); return; }
 
-            socket.join(robbyId);
-            io.to(robbyId).emit('join-room', {
+            socket.join(lobbyId);
+            io.to(lobbyId).emit('join-room', {
                 username: user.name,
-                roomId: robbyId,
-                roomType: roomTypeById(robbyId)
+                roomId: lobbyId,
+                roomType: roomTypeById(lobbyId)
             });
 
             callback(null, user);
@@ -344,6 +344,6 @@ module.exports = function (server) {
 
     function roomTypeById(id) {
         return (id === null || id === undefined) ? null :
-            id === robbyId ? 'robby' : 'game';
+            id === lobbyId ? 'lobby' : 'game';
     }
 };
