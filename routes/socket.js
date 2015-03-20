@@ -1,6 +1,8 @@
 var socketio = require('socket.io');
 var _ = require('underscore');
 var sessionMiddleware = require('../lib/module/sessionMiddleware');
+var User = require('../lib/model/user');
+var userStatus = require('../lib/model/userStatus');
 
 module.exports = function (server) {
     var io = socketio.listen(server);
@@ -15,11 +17,23 @@ module.exports = function (server) {
     io.sockets.on('connection', function (socket) {
         console.log('new connected: ' + socket.id);
 
-        users[socket.id] = {
+        var user = {
             info: !socket.request.session ? null :
                 !socket.request.session.passport ? null :
-                socket.request.session.passport.user
+                    socket.request.session.passport.user
         };
+
+        users[socket.id] = user;
+
+        checkAuth(socket, function (message) { socket.disconnect(message); });
+
+        socket.leave(robbyId);
+        User.updateStatus(user.username, userStatus.login, function (err) {
+            if (err) {
+                console.error(err);
+                socket.disconnect(err);
+            }
+        });
 
         /***** イベント登録 *****/
 

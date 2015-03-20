@@ -9,4 +9,5 @@ public/vendor/
 *.log
 
 config/
+!config/default.json
 !config/development.json
