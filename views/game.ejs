@@ -8,6 +8,7 @@
 	<script src="vendor/jquery/dist/jquery.min.js"></script>
 	<script src="vendor/underscore/underscore-min.js"></script>
 	<script src="vendor/enchant.js-builds/build/enchant.js"></script>
+	<script src="js/util.js"></script>
 	<script src="js/model/base_block.js"></script>
 	<script src="js/model/noto_label.js"></script>
 	<script src="js/model/ojama_block.js"></script>
@@ -19,5 +20,11 @@
 	<div id="container">
 		<h1><%= title %></h1>
 	</div>
+	<script>
+	$(function(){
+		var App =  ns('swkoubou.hackathon2015winter.App');
+		App.start();
+	});
+	</script>
 </body>
 </html>
