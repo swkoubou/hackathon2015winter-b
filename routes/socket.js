@@ -198,6 +198,32 @@ module.exports = function (server) {
             });
         });
 
+        // ブロックを入れ替える
+        socket.on('swap-blocks', function (req, fn) {
+            req = req || {};
+            fn = fn || function () {};
+
+            async.waterfall([
+                User.findById.bind(User, user.id),
+                function (user, callback) {
+                    Game.findById(user.gameId, callback);
+                },
+                function (game, callback) {
+                    if (!game) {
+                        userErrorWrap('must be join game room', {}, fn);
+                        return;
+                    }
+                    callback(null, game);
+                },
+                function (game, callback) {
+                    swapBlocks(game, user.id, req.block1, req.block2, callback);
+                }
+            ], function (err, game) {
+                if (err) { serverErrorWrap(err); return; }
+                successWrap('blocks swapped', {game: game}, fn);
+            });
+        });
+
         // 切断
         socket.on('disconnect', function () {
             console.log('disconnected: ' + socket.id);
@@ -306,6 +332,21 @@ module.exports = function (server) {
                 callback(null, game);
             }
         ], callback);
+    }
+
+    function swapBlocks(game, userId, block1, block2, callback) {
+        game.swapBlocks(userId, block1, block2, function (err, game) {
+
+            game.populate('users.user', function (err, game) {
+                io.to(String(game._id)).emit('swap-blocks', {
+                    game: game,
+                    block1: block1,
+                    block2: block2
+                });
+
+                callback(err, game);
+            });
+        });
     }
 
     /**** helper *****/

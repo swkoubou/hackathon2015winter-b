@@ -2,7 +2,7 @@
     'use strict';
 
     var socket = io.connect(),
-        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game', 'start-game'];
+        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game', 'start-game', 'swap-blocks'];
 
     // debug
     onKeys.forEach(function (key) {
@@ -41,6 +41,10 @@
         updateBlocks(req.game);
     });
 
+    socket.on('swap-blocks', function (req) {
+        updateBlocks(req.game);
+    });
+
     function joinLobby(callback) {
         socket.emit('join-lobby', {}, callback);
     }
@@ -55,6 +59,10 @@
 
     function startGame(callback) {
         socket.emit('start-game', {}, callback);
+    }
+
+    function swapBlocks(block1, block2, callback) {
+        socket.emit('swap-blocks', { block1: block1, block2: block2 }, callback);
     }
 
     //////////
@@ -72,6 +80,30 @@
         joinLobby();
     });
 
+    $('#random-swap-blocks-btn').click(function () {
+        swapBlocks({
+            x: _.random(0, 9),
+            y: _.random(0, 9)
+        }, {
+            x: _.random(0, 9),
+            y: _.random(0, 9)
+        }, function (req) {
+            //updateBlocks(req.game);
+        });
+    });
+
+    $('#swap-blocks-btn').click(function () {
+        swapBlocks({
+            x: Number($('#swap-blocks-x1').val()),
+            y: Number($('#swap-blocks-y1').val())
+        }, {
+            x: Number($('#swap-blocks-x2').val()),
+            y: Number($('#swap-blocks-y2').val())
+        }, function (req) {
+            //updateBlocks(req.game);
+        });
+    });
+
     function updateBlocks(game) {
         var $uls = $('#blocks ul');
 
@@ -85,8 +117,20 @@
                     $li = $('<li></li>');
                 }
 
-                var str = block.type === 'ojama' ? 'x' : 'o';
-                $li.append('<span>' + str + '</span>');
+                var str = block.type === 'ojama' ? '□' : 'X';
+                var $span = $('<span>' + str + '</span>');
+
+                ['color', 'backgroundColor'].forEach(function (key, j) {
+                    var color = '000000ff';
+                    _.times(3 - Number(block.lineTypes[j]), function () {
+                        color += '00';
+                    });
+                    color = '#' + color.slice(-6);
+                    $span.css(key, color);
+                });
+
+
+                $li.append($span);
 
                 if (!((i + 1) % 10)) {
                     $ul.append($li);
