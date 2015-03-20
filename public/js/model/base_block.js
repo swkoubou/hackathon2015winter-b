@@ -6,7 +6,7 @@
   Model.Block = enchant.Class.create(enchant.Sprite, {
     BLOCK_SIZE: 64,
     initialize: function(type, leftRightColor, rightLeftColor){
-      Sprite.call(this.BLOCK_SIZE, this.BLOCK_SIZE);
+      Sprite.call(this, this.BLOCK_SIZE, this.BLOCK_SIZE);
       this.leftRightColor = leftRightColor;
       this.rightLeftColor = rightLeftColor;
       this.type = type;

@@ -14,6 +14,7 @@
 	<script src="js/model/ojama_block.js"></script>
 	<script src="js/model/player.js"></script>
 	<script src="js/model/timer.js"></script>
+	<script src="js/model/tiles.js"></script>
 	<script src="js/main.js"></script>
 </head>
 <body>
@@ -22,8 +23,26 @@
 	</div>
 	<script>
 	$(function(){
-		var App =  ns('swkoubou.hackathon2015winter.App');
-		App.start();
+		var Package = ns('swkoubou.hackathon2015winter');
+		var gameInfo = {}; //dummy
+		var player1 = {
+			name: '_X_y_z_',
+			tiles: []
+		};
+		var player2 = {
+			name: 'sunya',
+			tiles: []
+		};
+
+		// dummy block data
+		_.each([player1, player2], function(player){
+			for(var i = 0; Package.global.TILE_COUNT > i; i++){
+				var tile = new Package.Model.Block(0, _.random(1, 3), _.random(1, 3));
+				player.tiles.push(tile);
+			}
+		});
+		var App = Package.App;
+		App.start(gameInfo, player1, player2);
 	});
 	</script>
 </body>

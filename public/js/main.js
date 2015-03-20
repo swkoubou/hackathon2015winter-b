@@ -7,25 +7,26 @@
   enchant();
   Package.global = {
     WIDTH: 1400,
-    HEIGHT: 800
+    HEIGHT: 900,
+    TILE_COUNT: 100,
+    TILE_WIDTH: 64,
+    TILE_HEIGHT: 64,
+    TOP_MARGIN: 120
   };
   var WIDTH = Package.global.WIDTH;
   var HEIGHT = Package.global.HEIGHT;
   var OVERLAY_COLOR = 'rgba(0, 0, 0, .8)';
   var LEFT_MARGIN = 40;
   var RIGHT_MARGIN = 40;
-  var TOP_MARGIN = 120;
-  var CELL_HEIGHT = 64;
-  var CELL_WIDTH = 64;
   var FINISH_TEXT_SHOW_TIME = 3;
   var SQUARE_STROKE_WIDTH = 3;
 
-  App.start = function(){
+  App.start = function(gameInfo, p1, p2){
     var game = new Core(WIDTH, HEIGHT);
     game.preload(); // load game resource
     game.fps = 60;
     game.onload = function(){
-      changeGameScene("_X_y_z_", "sunya");
+      changeGameScene(gameInfo, p1, p2);
     };
     // game.scale = 1.5;
     game.start();
@@ -37,7 +38,7 @@
   }
 
   // ゲーム中画面
-  function changeGameScene(p1, p2){
+  function changeGameScene(gameInfo, p1, p2){
     var timer = new Model.Timer();
     var game = enchant.Core.instance;
     game.addEventListener(enchant.Event.ENTER_FRAME, timer.update);
@@ -49,18 +50,18 @@
     });
     var scene = new Scene();
     scene.backgroundColor = '#FFEBEE';
-    game.replaceScene(scene);
     timer.start(scene);
-    var player1 = new Model.Player(p1, 0, scene);
-    var player2 = new Model.Player(p2, 1, scene);
+    var player1 = new Model.Player(p1.name, 0, scene, p1.tiles);
+    var player2 = new Model.Player(p2.name, 1, scene, p2.tiles);
+    game.replaceScene(scene);
     var squareWidth = WIDTH - LEFT_MARGIN;
-    var squareHeight = HEIGHT - TOP_MARGIN;
+    var squareHeight = HEIGHT - Package.global.TOP_MARGIN;
     var squareImage = new Sprite(squareWidth, squareHeight);
     var square = new Surface(squareWidth, squareHeight);
     square.context.strokeWidth = 3;
     square.context.beginPath();
     square.context.strokeStyle = '#004D40';
-    square.context.strokeRect(LEFT_MARGIN, TOP_MARGIN, squareWidth - LEFT_MARGIN - SQUARE_STROKE_WIDTH, squareHeight - TOP_MARGIN - SQUARE_STROKE_WIDTH);
+    square.context.strokeRect(LEFT_MARGIN, Package.global.TOP_MARGIN, squareWidth - LEFT_MARGIN - SQUARE_STROKE_WIDTH, squareHeight - Package.global.TOP_MARGIN - SQUARE_STROKE_WIDTH);
     squareImage.image = square;
     scene.addChild(squareImage);
   }
