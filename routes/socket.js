@@ -36,16 +36,13 @@ module.exports = function (server) {
 
         user.id = user.info.doc._id;
         user.name = user.info.username;
-        user.roomId = null;
-        user.roomType = null;
-        user.gameId = null;
-        user.gameId = null;
         sockets[user.name] = socket;
 
         // 接続したらユーザのステータスを初期化する
         User.findOneAndUpdate({name: user.name}, {
             status: userStatus.login,
-            game: null
+            gameId: null,
+            roomId: null
         }, function (err) {
             if (err) {
                 console.error(err);
@@ -62,11 +59,13 @@ module.exports = function (server) {
             async.series([
                 leaveRoom.bind(this, socket, user),
                 joinRobbyRoom.bind(this, socket, user)
-            ], function (err) {
+            ], function (err, results) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
+
+                var user = results[1];
                 successWrap('joined robby', {
-                    roomId: robbyId,
-                    roomType: 'robby'
+                    roomId: user.roomId,
+                    roomType: roomTypeById(user.roomId)
                 }, fn);
             });
         });
@@ -80,31 +79,40 @@ module.exports = function (server) {
                 userErrorWrap('invalid params: required targetUsername', req, fn);
                 return;
             }
+
             if (!sockets[req.targetUsername]) {
                 userErrorWrap('invalid params: not found targetUsername', req, fn);
+                return;
             }
 
-            Game.create({}, function (err, game) {
+            async.waterfall([
+                Game.create.bind(Game, {}),
+                function (game, callback) {
+                    var gameId = game._id;
+
+                    async.series([
+                        leaveRoom.bind(this, socket, user),
+                        joinGameRoom.bind(this, socket, user, gameId),
+                        callGameRoom.bind(this, user.name, req.targetUsername, gameId)
+                    ], function (err, results) {
+                        if (err) { callback(err); return; }
+
+                        var user = results[1];
+                        callback(null, game, user);
+                    });
+                }
+            ], function (err, game, user) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
 
-                var roomId = String(game._id);
-
-                async.series([
-                    leaveRoom.bind(this, socket, user),
-                    joinGameRoom.bind(this, socket, user, game._id),
-                    callGameRoom.bind(this, user.name, req.targetUsername, game._id)
-                ], function (err) {
-                    if (err) { serverErrorWrap(err, {}, fn); return; }
-                    successWrap('joined game room', {
-                        game: game,
-                        roomId: roomId,
-                        robbyType: 'game'
-                    }, fn);
-                });
+                successWrap('joined game room', {
+                    game: game,
+                    roomId: user.roomId,
+                    roomType: roomTypeById(user.roomId)
+                }, fn);
             });
         });
 
-        // ゲームに参加する (呼出しに応じる)
+        // ゲームに参加する
         socket.on('join-game', function (req, fn) {
             req = req || {};
             fn = fn || function () {};
@@ -113,23 +121,34 @@ module.exports = function (server) {
                 userErrorWrap('invalid params: required gameId', req, fn);
             }
 
-            Game.findOne({_id: req.gameId}, function (err, game) {
+            async.waterfall([
+                Game.findById.bind(Game, req.gameId),
+                function (game, callback) {
+                    if (!game) {
+                        userErrorWrap('invalid params: not found gameId', req, fn);
+                        return;
+                    }
+
+                    var gameId = game._id;
+
+                    async.series([
+                        leaveRoom.bind(this, socket, user),
+                        joinGameRoom.bind(this, socket, user, gameId)
+                    ], function (err, results) {
+                        if (err) { callback(err); return; }
+
+                        var user = results[1];
+                        callback(null, game, user);
+                    });
+                }
+            ], function (err, game, user) {
                 if (err) { serverErrorWrap(err, {}, fn); return; }
-                if (!game) { userErrorWrap('invalid params: not found gameId', req, fn); return; }
 
-                var roomId = String(game._id);
-
-                async.series([
-                    leaveRoom.bind(this, socket, user),
-                    joinGameRoom.bind(this, socket, user, game._id)
-                ], function (err) {
-                    if (err) { serverErrorWrap(err, {}, fn); return; }
-                    successWrap('joined game room', {
-                        game: game,
-                        roomId: roomId,
-                        roomType: 'game'
-                    }, fn);
-                });
+                successWrap('joined game room', {
+                    game: game,
+                    roomId: user.roomId,
+                    roomType: roomTypeById(user.roomId)
+                }, fn);
             });
         });
 
@@ -141,25 +160,34 @@ module.exports = function (server) {
             req.gameLimitSeconds = req.gameLimitSeconds || 5 * 1000;
             req.delaySeconds = req.delaySeconds || 20;
 
-            var roomId = user.roomId;
-            var roomType = user.roomType;
-            var gameId = user.gameId;
-            if (!gameId || !roomId || roomType !== 'game') {
-                userErrorWrap('must be in game room', {roomId: roomId, roomType: roomType, gameId: gameId}, fn);
-                return;
-            }
+            async.waterfall([ // get users
+                User.findById.bind(User, user.id),
+                function (user, callback) {
+                    var gameId = user.gameId;
+                    var roomId = user.roomId;
+                    var roomType = roomTypeById(user.roomId);
 
-            User.find({status: userStatus.playing, game: gameId}, function (err, users) {
-                if (err) { serverErrorWrap(err, {}, fn); return; }
-                if (users.length < 2) {
-                    userErrorWrap('user length must be equals 2 in same game room', {users: users}, fn);
-                    return;
+                    if (!gameId || !roomId || roomType !== 'game') {
+                        userErrorWrap('must be in game room', {gameId: gameId, roomId: roomId, roomType: roomType}, fn);
+                        return;
+                    }
+
+                    callback(null, user);
+                },
+                function (user, callback) {
+                    User.find({status: userStatus.playing, gameId: user.gameId}, callback);
+                },
+                function (users, callback) {
+                    if (users.length < 2) {
+                        userErrorWrap('user length must be equals 2 in same game room', {users: users}, fn);
+                        return;
+                    }
+
+                    startGame(socket, users, users[0].gameId, req.gameLimitSeconds, req.delaySeconds, callback);
                 }
-
-                startGame(socket, users, gameId, req.gameLimitSeconds, req.delaySeconds, function (err, game) {
-                    if (err) { serverErrorWrap(err); return; }
-                    successWrap('game start!', {game: game}, fn);
-                });
+            ], function (err, game) {
+                if (err) { serverErrorWrap(err); return; }
+                successWrap('game start!', {game: game}, fn);
             });
         });
 
@@ -173,7 +201,6 @@ module.exports = function (server) {
             ], function (err) {
                 if (err) { console.error(err); }
 
-                socket.leaveAll();
                 delete users[socket.id];
                 delete sockets[user.name];
             });
@@ -183,66 +210,64 @@ module.exports = function (server) {
     /**** emitter and method *****/
 
     function joinRobbyRoom(socket, user, callback) {
-        User.updateStatus(user.name, userStatus.robby, function (err) {
+        User.findOneAndUpdate({name: user.name}, {
+            status: userStatus.robby,
+            gameId: null,
+            roomId: robbyId
+        }, function (err, user) {
             if (err) { callback(err); return; }
 
-            user.roomId = robbyId;
-            user.roomType = 'robby';
             socket.join(robbyId);
             io.to(robbyId).emit('join-room', {
                 username: user.name,
                 roomId: robbyId,
-                roomType: 'robby'
+                roomType: roomTypeById(robbyId)
             });
 
-            callback(null);
+            callback(null, user);
         });
     }
 
     function leaveRoom(socket, user, callback) {
+        // ユーザが見つからない場合はスルー
         if (!user) { callback(null); return; }
 
         User.findOneAndUpdate({name: user.name}, {
             status: userStatus.login,
-            game: null
-        }, function (err) {
+            gameId: null,
+            roomId: null
+        }, function (err, user) {
             if (err) { callback(err); return; }
 
-            var roomId = user.roomId;
-            if (roomId) {
-                user.gameId = null;
-                user.roomId = null;
-                user.roomType = null;
-                socket.leave(roomId);
-                io.to(roomId).emit('leave-room', {
+            if (user.roomId) {
+                socket.leave(user.roomId);
+                io.to(user.roomId).emit('leave-room', {
                     username: user.name,
-                    roomId: roomId,
-                    roomType: roomId === robbyId ? 'robby' : 'game'
+                    roomId: user.roomId,
+                    roomType: roomTypeById(user.roomId)
                 });
             }
 
-            callback(null);
+            callback(null, user);
         });
     }
 
     function joinGameRoom(socket, user, gameId, callback) {
         User.findOneAndUpdate({name: user.name}, {
             status: userStatus.playing,
-            game: gameId
-        }, function (err) {
+            gameId: gameId,
+            roomId: String(gameId)
+        }, function (err, user) {
             if (err) { callback(err); return; }
 
-            user.gameId = gameId;
-            var roomId = user.roomId = String(gameId);
-            var roomType = user.roomType = 'game';
-            socket.join(roomId);
-            io.to(roomId).emit('join-room', {
+            socket.join(user.roomId);
+            io.to(user.roomId).emit('join-room', {
                 username: user.name,
-                roomId: roomId ,
-                roomType: roomType
+                roomId: user.roomId,
+                roomType: roomTypeById(user.roomId)
             });
 
-            callback(null);
+            callback(null, user);
         });
     }
 
@@ -259,22 +284,21 @@ module.exports = function (server) {
     }
 
     function startGame(socket, users, gameId, gameLimitSeconds, delaySeconds, callback) {
-        Game.initialize({_id: gameId}, users, {}, function (err, game) {
-            if (err) { callback(err); return; }
-
-            game.start(gameLimitSeconds, delaySeconds, function (err, game) {
-                if (err) { callback(err); return; }
-
-                game.populate('users.user', function (err, game) {
-                    if (err) { callback(err); return; }
-
-                    var roomId = String(gameId);
-                    io.to(roomId).emit('start-game', {game: game});
-
-                    callback(null, game);
-                });
-            });
-        });
+        async.waterfall([
+            function (callback) {
+                Game.initialize({_id: gameId}, users, {}, function (err, game) { callback(err, game); });
+            },
+            function (game, callback) {
+                game.start(gameLimitSeconds, delaySeconds, function (err, game) { callback(err, game); });
+            },
+            function (game, callback) {
+                game.populate('users.user', function (err, game) { callback(err, game); });
+            },
+            function (game, callback) {
+                io.to(String(gameId)).emit('start-game', {game: game});
+                callback(null, game);
+            }
+        ], callback);
     }
 
     /**** helper *****/
@@ -318,16 +342,8 @@ module.exports = function (server) {
         return true;
     }
 
-    function checkJoinedGameRoom(socket, fn) {
-        var user = users[socket.id];
-
-        if (!checkAuth(socket, fn)) { return false; }
-
-        if (!user.projectRoomId) {
-            userErrorWrap('must be join game room', {}, fn);
-            return false;
-        }
-
-        return true;
+    function roomTypeById(id) {
+        return (id === null || id === undefined) ? null :
+            id === robbyId ? 'robby' : 'game';
     }
 };
