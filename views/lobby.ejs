@@ -6,7 +6,7 @@
 
     <link rel='stylesheet' href='/vendor/materialize/dist/css/materialize.css' />
 </head>
-<body>
+<body style="background-color: #e0e0e0;">
     <nav>
         <div class="nav-wrapper">
             <a class="brand-logo center">ロビー</a>
@@ -36,9 +36,28 @@
         </div>
     </div>
 
-    <div class="col s12 m8 19">
-        hei
+    <!--forEachで-->
+    <div class="col s12 m8 19" style="padding: 15px">
+        <!--対戦ゲーム画面-->
+        <a href="#" onclick="toast('<span>no</span><a class=&quot;btn-flat yellow-text&quot; href=&quot;#!&quot;>yes<a>', 10000)">
+            <div class="col s12 m8 offset-m2 l6 offset-l3">
+                <div class="card-panel grey lighten-5 z-depth-1">
+                    <div class="row valign-wrapper">
+                        <div class="col s2">
+                            <!--TwitterIcon-->
+                            <img src="#" alt="" class="circle responsive-img"> <!-- notice the "circle" class -->
+                        </div>
+                        <div class="col s10">
+                            <span class="black-text">
+                            screen_nameとか
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
     </div>
+
 </div>
 
 <script src='/vendor/jquery/dist/jquery.js'></script>

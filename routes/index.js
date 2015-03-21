@@ -21,7 +21,17 @@ router.get('/lobby', function (req, res) {
     res.render('lobby', {
         title: config.title,
         user: req.user,
-        logined: logined,
+        logined: logined
+    });
+});
+
+router.get('/result', function (req, res) {
+    var logined = req.isAuthenticated && req.isAuthenticated();
+
+    res.render('result', {
+        title: config.title,
+        user: req.user,
+        logined: logined
     });
 });
 
