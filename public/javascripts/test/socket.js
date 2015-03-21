@@ -61,8 +61,8 @@
         socket.emit('start-game', {}, callback);
     }
 
-    function swapBlocks(block1, block2, callback) {
-        socket.emit('swap-blocks', { block1: block1, block2: block2 }, callback);
+    function swapBlocks(blockQuery1, blockQuery2, callback) {
+        socket.emit('swap-blocks', { blockQuery1: blockQuery1, blockQuery2: blockQuery2 }, callback);
     }
 
     //////////
