@@ -111,8 +111,6 @@
 
     $('#random-block-wrap-erase-btn').click(function () {
         var blockQueries = [];
-        //var x = _.random(0, 8);
-        //var y = _.random(0, 8);
         var x = 0;
         var y = 0;
 
