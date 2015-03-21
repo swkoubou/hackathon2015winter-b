@@ -46,6 +46,10 @@
         updateBlocks(req.game);
     });
 
+    socket.on('block-wrap-erase', function (req) {
+        updateBlocks(req.game);
+    });
+
     function joinLobby(callback) {
         socket.emit('join-lobby', {}, callback);
     }
@@ -107,13 +111,33 @@
 
     $('#random-block-wrap-erase-btn').click(function () {
         var blockQueries = [];
+        //var x = _.random(0, 8);
+        //var y = _.random(0, 8);
+        var x = 0;
+        var y = 0;
 
-        _.times(8, function () {
-            blockQueries.push({
-                x: _.random(0, 9),
-                y: _.random(0, 9),
-                lineTypeIndex: _.random(0, 1)
-            });
+        blockQueries.push({
+            x: x,
+            y: y,
+            lineTypeIndex: 0
+        });
+
+        blockQueries.push({
+            x: x,
+            y: y + 1,
+            lineTypeIndex: 1
+        });
+
+        blockQueries.push({
+            x: x + 1,
+            y: y + 1,
+            lineTypeIndex: 0
+        });
+
+        blockQueries.push({
+            x: x + 1,
+            y: y,
+            lineTypeIndex: 1
         });
 
         blockWrapErase(blockQueries);
