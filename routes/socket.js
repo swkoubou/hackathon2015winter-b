@@ -193,7 +193,7 @@ module.exports = function (server) {
                     startGame(socket, users, users[0].gameId, req.gameLimitSeconds, req.delaySeconds, callback);
                 }
             ], function (err, game) {
-                if (err) { serverErrorWrap(err); return; }
+                if (err) { serverErrorWrap(err, {}, fn); return; }
                 successWrap('game start!', {game: game}, fn);
             });
         });
@@ -224,7 +224,7 @@ module.exports = function (server) {
                     swapBlocks(game, user.name, user.id, req.blockQuery1, req.blockQuery2, callback);
                 }
             ], function (err, game) {
-                if (err) { serverErrorWrap(err); return; }
+                if (err) { serverErrorWrap(err, {}, fn); return; }
                 successWrap('blocks swapped', {game: game}, fn);
             });
         });
@@ -252,10 +252,20 @@ module.exports = function (server) {
                     callback(null, game);
                 },
                 function (game, callback) {
+                    game.checkWrap(user.id, req.blockQueries, function (err, isValid) {
+                        if (err) { callback(err); return;}
+                        if (!isValid) {
+                            userErrorWrap('cannot block wrap erase', req, fn);
+                            return;
+                        }
+                        callback(null, game);
+                    });
+                },
+                function (game, callback) {
                     blockWrapErase(game, user.name, user.id, req.blockQueries, callback);
                 }
             ], function (err, game) {
-                if (err) { serverErrorWrap(err); return; }
+                if (err) { serverErrorWrap(err, {}, fn); return; }
                 successWrap('completed block wrap erased', { game: game }, fn);
             });
         });
@@ -372,6 +382,8 @@ module.exports = function (server) {
 
     function swapBlocks(game, username, userId, blockQuery1, blockQuery2, callback) {
         game.swapBlocks(userId, blockQuery1, blockQuery2, function (err, game) {
+            if (err) { callback(err); return; }
+
             game.populate('users.user', function (err, game) {
                 io.to(String(game._id)).emit('swap-blocks', {
                     game: game,
@@ -387,6 +399,8 @@ module.exports = function (server) {
 
     function blockWrapErase(game, username, userId, blockQueries, callback) {
         game.blockWrapErase(userId, blockQueries, function (err, game, createBlocks, erasedBlocks, erasedOjamaNum) {
+            if (err) { callback(err); return; }
+
             game.populate('users.user', function (err, game) {
                 io.to(String(game._id)).emit('block-wrap-erase', {
                     game: game,

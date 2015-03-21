@@ -2,7 +2,8 @@
     'use strict';
 
     var socket = io.connect(),
-        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game', 'start-game', 'swap-blocks'];
+        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game',
+            'start-game', 'swap-blocks', 'block-wrap-erase'];
 
     // debug
     onKeys.forEach(function (key) {
@@ -65,6 +66,10 @@
         socket.emit('swap-blocks', { blockQuery1: blockQuery1, blockQuery2: blockQuery2 }, callback);
     }
 
+    function blockWrapErase(blockQueries, callback) {
+        socket.emit('block-wrap-erase', { blockQueries: blockQueries }, callback);
+    }
+
     //////////
 
     $('#call-game-btn').click(function () {
@@ -87,8 +92,6 @@
         }, {
             x: _.random(0, 9),
             y: _.random(0, 9)
-        }, function (req) {
-            //updateBlocks(req.game);
         });
     });
 
@@ -99,9 +102,21 @@
         }, {
             x: Number($('#swap-blocks-x2').val()),
             y: Number($('#swap-blocks-y2').val())
-        }, function (req) {
-            //updateBlocks(req.game);
         });
+    });
+
+    $('#random-block-wrap-erase-btn').click(function () {
+        var blockQueries = [];
+
+        _.times(8, function () {
+            blockQueries.push({
+                x: _.random(0, 9),
+                y: _.random(0, 9),
+                lineTypeIndex: _.random(0, 1)
+            });
+        });
+
+        blockWrapErase(blockQueries);
     });
 
     function updateBlocks(game) {
