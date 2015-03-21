@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+
+    <link rel='stylesheet' href='/vendor/materialize/dist/css/materialize.css' />
+</head>
+<body>
+    <nav>
+        <div class="nav-wrapper">
+            <a class="brand-logo center">ロビー</a>
+                <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="mdi-navigation-menu"></i></a>
+            <ul class="right hide-on-med-and-down">
+                <li><a href="/auth/logout"><i class="mdi-social-person-outline right" ></i>ログアウト</a></li>
+            </ul>
+            <ul id="nav-mobile" class="side-nav">
+                <li><a href="/auth/logout"><i class="mdi-social-person-outline right" ></i>ログアウト</a></li>
+            </ul>
+        </div>
+    </nav>
+
+<div class="row">
+    <div class="col s2">
+        <div class="card">
+            <div class="card-image">
+                <!-- TwitterIcon-->
+                <img src="#">
+            </div>
+            <div class="card-content">
+                <span class="card-title activator grey-text text-darken-4"><%= user.displayName %></span>
+            </div>
+            <div class="card-action">
+                <a href="#">その人のTwitterLinkとか？</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col s12 m8 19">
+        hei
+    </div>
+</div>
+
+<script src='/vendor/jquery/dist/jquery.js'></script>
+<script src='/vendor/materialize/dist/js/materialize.js'></script>
+    <script>
+        $(function(){
+            $(".button-collapse").sideNav();
+        });
+
+    </script>
+
+</body>
+</html>

@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel='stylesheet' href='/vendor/materialize/dist/css/materialize.css' />
 </head>
 <body>
 
-<h1><%= title %></h1>
-<p>Welcome to <%= title %></p>
+<h1><%= title %>が作ったゲーム</h1>
 
 <% if (mustLogin) { %>
 <p>ログインしてください。</p>
@@ -16,16 +16,20 @@
 
 <% if (logined) { %>
 
-<p>logined</p>
-<p><a href="/auth/logout">logout</a></p>
-<p>Hello, <%= user.displayName %></p>
+<a class="waves-effect waves-light btn" href="/auth/logout"><i class="mdi-social-person-outline right" ></i>ログアウト</a>
+<p><%= user.displayName %>さん、こんにちは</p>
+<a href="/lobby">ロビー</a>
 
 <% } else { %>
 
-<p><a href="/auth/twitter">login</a></p>
+<p>Twitter認証でゲームが始められます</p>
+<a class="waves-effect waves-light btn" href="/auth/twitter"><i class="mdi-social-person-add right"></i>ログイン</a>
 
 <% } %>
 
+
+<script src='/vendor/jquery/dist/jquery.js'></script>
+<script src='/vendor/materialize/dist/js/materialize.js'></script>
 </body>
 
 </html>

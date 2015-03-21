@@ -14,6 +14,7 @@
   "dependencies": {
     "jquery": "~2",
     "underscore": "~1",
-    "enchant.js-builds": "~0.8.2"
+    "enchant.js-builds": "~0.8.2",
+    "materialize": "~0.95.3"
   }
 }
