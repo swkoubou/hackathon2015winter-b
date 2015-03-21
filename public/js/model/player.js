@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   var Package = ns('swkoubou.hackathon2015winter');
-  var Model = Package.Model;
+  var Model = ns('swkoubou.hackathon2015winter.Model');
 
   var NAME_COLOR = '#009688';
 
@@ -12,6 +12,8 @@
   Model.Player = enchant.Class.create({
     initialize: function(name, playerId, gameScene, tiles){
       var WIDTH = enchant.Core.instance.width;
+      var TOP_MARGIN = Package.global.TOP_MARGIN;
+      var LEFT_MARGIN = Package.global.LEFT_MARGIN;
       this.score = 0;
       this.name = name;
       this.tiles = new Model.Tiles(tiles);
@@ -20,27 +22,25 @@
       var that = this;
       var tileArray = [];
       console.log(gameScene);
-      var group = new Group();
+      var tileGroup = new Group();
       _.each(this.tiles.getTileData(), function(row, y){
         // if(y == 1) return;
-        _.each(row, function(tile, x){
-          var xPos = x * Package.global.TILE_WIDTH + that.offsetX;
+        _.each(row, function(block, x){
+          var xPos = x * Package.global.TILE_WIDTH;
           var yPos = y * Package.global.TILE_HEIGHT;
-          console.log(tile.getRightLeftColor());
-          tile.moveTo(xPos, yPos);
-          console.log(tile);
-          // tile.backgroundColor = "#f0f";
-          // tileArray.push(tile);
-          group.addChild(tile);
-          // var entity = new Entity();
-          // entity.width = 64;
-          // entity.height = 64;
-          // entity.backgroundColor = "#f0f";
-          // gameScene.addChild(entity);
+          var groupBlock = block.getGroup();
+          groupBlock.moveTo(xPos, yPos);
+          tileGroup.addChild(groupBlock);
         });
       });
-      console.log("aaa");
-      gameScene.addChild(group);
+      var tileGroupWidth = tileGroup.width;
+      console.log(tileGroupWidth);
+      var tilePos = {
+        x: playerId === 0 ? LEFT_MARGIN : (WIDTH + Package.global.GAP) / 2 - Package.global.SCREEN_BORDER_WIDTH,
+        y: TOP_MARGIN
+      };
+      tileGroup.moveTo(tilePos.x, tilePos.y);
+      gameScene.addChild(tileGroup);
 
       var scoreLabel = new Model.NotoLabel('200%');
       this.scoreLabel = scoreLabel;

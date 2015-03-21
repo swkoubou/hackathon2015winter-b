@@ -42,12 +42,16 @@
       this.circle.context.stroke();
       if(this.prev !== remain){
         this.timerLabel.text = remain;
+        if(this.secondCallback) this.secondCallback();
       }
       this.prev = remain;
       if(remain === 0){
         this.end();
       }
       return this.time = remain;
+    },
+    setSecondCallback: function(callback){
+      this.secondCallback = callback;
     },
     getRemainingTime: function(){
       return this.time;
@@ -61,7 +65,7 @@
       scene.addChild(this.timerLabel);
     },
     end: function(){
-      if(this.endCallback) this.endCallback();
+      if(this.endCallback) this.endCallback(this);
     },
     getPlayTime: function(){
       return this.TIME_LIMIT;

@@ -15,7 +15,6 @@ router.get('/', function (req, res) {
     });
 });
 
-
 router.get('/game', function(req, res, next){
   res.render('game', config);
 });

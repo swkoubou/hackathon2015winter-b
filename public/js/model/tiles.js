@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   var Package = ns('swkoubou.hackathon2015winter');
-  var Model = Package.Model;
+  var Model = ns('swkoubou.hackathon2015winter.Model');
 
   Model.Tiles = enchant.Class.create({
     TILE_WIDTH: 10,
