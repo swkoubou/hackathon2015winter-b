@@ -2,7 +2,8 @@
     'use strict';
 
     var socket = io.connect(),
-        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game', 'start-game'];
+        onKeys = ['connect', 'disconnect', 'join-room', 'leave-room', 'called-game',
+            'start-game', 'swap-blocks', 'block-wrap-erase'];
 
     // debug
     onKeys.forEach(function (key) {
@@ -37,6 +38,14 @@
         joinGame(req.gameId);
     });
 
+    socket.on('start-game', function (req) {
+        updateBlocks(req.game);
+    });
+
+    socket.on('swap-blocks', function (req) {
+        updateBlocks(req.game);
+    });
+
     function joinLobby(callback) {
         socket.emit('join-lobby', {}, callback);
     }
@@ -53,6 +62,14 @@
         socket.emit('start-game', {}, callback);
     }
 
+    function swapBlocks(blockQuery1, blockQuery2, callback) {
+        socket.emit('swap-blocks', { blockQuery1: blockQuery1, blockQuery2: blockQuery2 }, callback);
+    }
+
+    function blockWrapErase(blockQueries, callback) {
+        socket.emit('block-wrap-erase', { blockQueries: blockQueries }, callback);
+    }
+
     //////////
 
     $('#call-game-btn').click(function () {
@@ -67,5 +84,74 @@
     $('#join-lobby-btn').click(function () {
         joinLobby();
     });
+
+    $('#random-swap-blocks-btn').click(function () {
+        swapBlocks({
+            x: _.random(0, 9),
+            y: _.random(0, 9)
+        }, {
+            x: _.random(0, 9),
+            y: _.random(0, 9)
+        });
+    });
+
+    $('#swap-blocks-btn').click(function () {
+        swapBlocks({
+            x: Number($('#swap-blocks-x1').val()),
+            y: Number($('#swap-blocks-y1').val())
+        }, {
+            x: Number($('#swap-blocks-x2').val()),
+            y: Number($('#swap-blocks-y2').val())
+        });
+    });
+
+    $('#random-block-wrap-erase-btn').click(function () {
+        var blockQueries = [];
+
+        _.times(8, function () {
+            blockQueries.push({
+                x: _.random(0, 9),
+                y: _.random(0, 9),
+                lineTypeIndex: _.random(0, 1)
+            });
+        });
+
+        blockWrapErase(blockQueries);
+    });
+
+    function updateBlocks(game) {
+        var $uls = $('#blocks ul');
+
+        $uls.each(function (i) {
+            var $ul = $(this);
+            $ul.children('li').remove();
+
+            var $li;
+            game.users[i].blocks.forEach(function (block, i) {
+                if (!(i % 10)) {
+                    $li = $('<li></li>');
+                }
+
+                var str = block.type === 'ojama' ? '□' : 'X';
+                var $span = $('<span>' + str + '</span>');
+
+                ['color', 'backgroundColor'].forEach(function (key, j) {
+                    var color = '000000ff';
+                    _.times(3 - Number(block.lineTypes[j]), function () {
+                        color += '00';
+                    });
+                    color = '#' + color.slice(-6);
+                    $span.css(key, color);
+                });
+
+
+                $li.append($span);
+
+                if (!((i + 1) % 10)) {
+                    $ul.append($li);
+                }
+            });
+        });
+    }
 
 }());

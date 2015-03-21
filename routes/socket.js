@@ -193,8 +193,80 @@ module.exports = function (server) {
                     startGame(socket, users, users[0].gameId, req.gameLimitSeconds, req.delaySeconds, callback);
                 }
             ], function (err, game) {
-                if (err) { serverErrorWrap(err); return; }
+                if (err) { serverErrorWrap(err, {}, fn); return; }
                 successWrap('game start!', {game: game}, fn);
+            });
+        });
+
+        // ブロックを入れ替える
+        socket.on('swap-blocks', function (req, fn) {
+            req = req || {};
+            fn = fn || function () {};
+
+            if (!req.blockQuery1 || !req.blockQuery2) {
+                userErrorWrap('required params: blockQuery1, blockQuery2', req, fn);
+                return;
+            }
+
+            async.waterfall([
+                User.findById.bind(User, user.id),
+                function (user, callback) {
+                    Game.findById(user.gameId, callback);
+                },
+                function (game, callback) {
+                    if (!game) {
+                        userErrorWrap('must be join game room', {}, fn);
+                        return;
+                    }
+                    callback(null, game);
+                },
+                function (game, callback) {
+                    swapBlocks(game, user.name, user.id, req.blockQuery1, req.blockQuery2, callback);
+                }
+            ], function (err, game) {
+                if (err) { serverErrorWrap(err, {}, fn); return; }
+                successWrap('blocks swapped', {game: game}, fn);
+            });
+        });
+
+        // ブロックを囲んで消す
+        socket.on('block-wrap-erase', function (req, fn) {
+            req = req || {};
+            fn = fn || function () {};
+
+            if (!req.blockQueries) {
+                userErrorWrap('required params: blockQueries', req, fn);
+                return;
+            }
+
+            async.waterfall([
+                User.findById.bind(User, user.id),
+                function (user, callback) {
+                    Game.findById(user.gameId, callback);
+                },
+                function (game, callback) {
+                    if (!game) {
+                        userErrorWrap('must be join game room', {}, fn);
+                        return;
+                    }
+                    callback(null, game);
+                },
+                function (game, callback) {
+                    game.checkWrap(user.id, req.blockQueries, function (err, isValid) {
+                        if (err) { callback(err); return;}
+                        if (!isValid) {
+                            userErrorWrap('cannot block wrap erase', req, fn);
+                            return;
+                        }
+                        callback(null, game);
+                    });
+                },
+                function (game, callback) {
+                    blockWrapErase(game, user.name, user.id, req.blockQueries, callback);
+                }
+            ], function (err, game) {
+                if (err) { serverErrorWrap(err, {}, fn); return; }
+                successWrap('completed block wrap erased', { game: game }, fn);
             });
         });
 
@@ -306,6 +378,42 @@ module.exports = function (server) {
                 callback(null, game);
             }
         ], callback);
+    }
+
+    function swapBlocks(game, username, userId, blockQuery1, blockQuery2, callback) {
+        game.swapBlocks(userId, blockQuery1, blockQuery2, function (err, game) {
+            if (err) { callback(err); return; }
+
+            game.populate('users.user', function (err, game) {
+                io.to(String(game._id)).emit('swap-blocks', {
+                    game: game,
+                    username: username,
+                    blockQuery1: blockQuery1,
+                    blockQuery2: blockQuery2
+                });
+
+                callback(err, game);
+            });
+        });
+    }
+
+    function blockWrapErase(game, username, userId, blockQueries, callback) {
+        game.blockWrapErase(userId, blockQueries, function (err, game, createBlocks, erasedBlocks, erasedOjamaNum) {
+            if (err) { callback(err); return; }
+
+            game.populate('users.user', function (err, game) {
+                io.to(String(game._id)).emit('block-wrap-erase', {
+                    game: game,
+                    username: username,
+                    blockQueries: blockQueries,
+                    createBlocks: createBlocks,
+                    erasedBlocks: erasedBlocks,
+                    erasedOjamaNum: erasedOjamaNum
+                });
+
+                callback(err, game, createBlocks, erasedBlocks, erasedOjamaNum);
+            });
+        });
     }
 
     /**** helper *****/

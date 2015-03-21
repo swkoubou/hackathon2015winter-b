@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <style>
+        #blocks ul {
+            float: left;
+            width: 150px;
+        }
+        #blocks ul li {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        #blocks ul li span {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
@@ -28,7 +45,7 @@
     <h2>Emit: call-game</h2>
     <div>
         <label for="call-username">call username</label>
-        <input type="text" id="call-username">
+        <input type="text" id="call-username" value="swk_infolecture">
     </div>
     <button type="button" id="call-game-btn">Submit</button>
 </form>
@@ -43,9 +60,48 @@
     <button type="button" id="start-game-btn">Start Game</button>
 </form>
 
+<form class="random-swap-blocks-test">
+    <h2>Emit: swap-blocks (random)</h2>
+    <button type="button" id="random-swap-blocks-btn">Random Swap Blocks</button>
+</form>
+
+<form class="swap-blocks-test">
+    <h2>Emit: swap-blocks</h2>
+    <div>
+        <label for="swap-blocks-x1">x1</label>
+        <input type="text" id="swap-blocks-x1" value="0">
+    </div>
+    <div>
+        <label for="swap-blocks-y1">y1</label>
+        <input type="text" id="swap-blocks-y1" value="0">
+    </div>
+    <div>
+        <label for="swap-blocks-x2">x2</label>
+        <input type="text" id="swap-blocks-x2" value="1">
+    </div>
+    <div>
+        <label for="swap-blocks-y2">y2</label>
+        <input type="text" id="swap-blocks-y2" value="0">
+    </div>
+    <button type="button" id="swap-blocks-btn">Swap Blocks</button>
+</form>
+
+<form class="random-block-wrap-erase-test">
+    <h2>Emit: block-wrap-erase (random)</h2>
+    <button type="button" id="random-block-wrap-erase-btn">Random Block Wrap Erase</button>
+</form>
+
+<hr>
+
+<div id="blocks">
+    <ul></ul>
+    <ul></ul>
+</div>
+
 <!-- load javascripts -->
 <script src="/socket.io/socket.io.js"></script>
 <script src="/vendor/jquery/dist/jquery.min.js"></script>
+<script src="/vendor/underscore/underscore-min.js"></script>
 <script src="/javascripts/test/socket.js"></script>
 
 </body>
