@@ -18,6 +18,7 @@ router.get('/', function (req, res) {
 
 router.get('/game', function(req, res, next){
   res.render('game', config);
+});
 
 router.get('/lobby', function (req, res) {
     var logined = req.isAuthenticated && req.isAuthenticated();
